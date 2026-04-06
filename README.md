@@ -55,7 +55,7 @@ Backend-style sample output:
 - **Visualization:** Matplotlib, Seaborn
 - **Data Sources:** Google Sheets CSV ingestion
 - **Database:** PostgreSQL (`psycopg2`)
-- **AI Service Integration:** Google Gemini API (optional fallback used only for malformed text where deterministic sentence segmentation fails; increases per-record cost and latency when invoked)
+- **AI Service Integration:** Google Gemini API (optional fallback for sentence segmentation)
 
 ## Setup / Installation 💻
 ```bash
@@ -68,7 +68,7 @@ python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
 # 3) Install core dependencies used in notebooks
-# Note: use these bounded ranges now; generate a pinned requirements.txt for production reproducibility.
+# Note: this repository currently does not include a requirements.txt; use these bounded ranges now and generate a pinned requirements.txt for reproducible environments.
 pip install \
   "pandas>=2.0,<3" "numpy>=1.24,<3" "gensim>=4.3,<5" "nltk>=3.8,<4" \
   "spacy>=3.7,<4" "matplotlib>=3.7,<4" "seaborn>=0.12,<1" \
@@ -79,7 +79,7 @@ python -m spacy download en_core_web_sm
 # 4) Configure optional integrations used in notebooks
 # Create a .env file in project root and add:
 # GEMINI_API_KEY=your_api_key
-# For DB-backed flows in split_reviews.ipynb, edit the in-notebook Python dictionary `DB_CONFIG` with: host, port, database, user, password.
+# For DB-backed flows, keep DB credentials in `.env` (e.g., DB_HOST, DB_PORT, DB_NAME, DB_USER, DB_PASSWORD) and load them into `DB_CONFIG` inside the notebook.
 
 # 5) Launch notebooks
 jupyter notebook
@@ -93,6 +93,8 @@ The system is implemented as a notebook-driven NLP pipeline:
 4. **Sentiment Scoring** using a fine-tuned DeBERTa classifier.
 5. **Topic Discovery** using LDA and coherence checks for interpretable themes.
 6. **Aggregate Insights** by product/review cohorts for downstream decision-making.
+
+Gemini fallback is invoked only for malformed review text where deterministic sentence splitting fails, so it is optional but adds incremental latency and API cost when triggered.
 
 Design choices favor interpretability and iterative experimentation over premature service abstraction.
 
