@@ -1,10 +1,10 @@
 # NLP Fitness Review Insights
 
-![Build Status](https://img.shields.io/badge/build-passing-brightgreen)
-![Runtime](https://img.shields.io/badge/runtime-Python%203.11-blue)
+![Build Status](https://img.shields.io/badge/build-notebook%20pipeline-informational)
+![Runtime](https://img.shields.io/badge/runtime-Python%203-blue)
 ![License](https://img.shields.io/badge/license-Not%20Specified-lightgrey)
 
-Problem: fitness equipment teams struggle to convert thousands of scattered customer reviews into clear, actionable product insights.
+Problem: fitness brands and marketplace teams struggle to convert large volumes of noisy customer reviews into reliable product insights.
 
 ## Table of Contents 📑
 - [About the Project 📚](#about-the-project-)
@@ -21,38 +21,39 @@ Problem: fitness equipment teams struggle to convert thousands of scattered cust
 - [Author](#author)
 
 ## About the Project 📚
-This project analyzes customer reviews for digital treadmills and exercise bikes using NLP + ML to identify recurring themes and sentiment drivers at scale.
+This project builds an NLP pipeline for fitness-product reviews: sentence splitting, language filtering, sentiment classification, and topic modeling (LDA) to surface recurring themes and pain points.
 
-It was built to answer practical product questions: what customers repeatedly praise or complain about, how sentiment shifts by feature and price segment, and where expectation gaps appear after purchase.
+It was built to answer practical questions such as: which features cause negative sentiment, what topics dominate by product type, and what should product teams prioritize next.
 
-It is for product managers, category teams, marketplace ops, and data teams who need evidence-backed decisions for feature prioritization, catalog strategy, and review intelligence workflows.
+It is for product managers, category analysts, CX teams, and data practitioners working with review-heavy e-commerce products.
 
 ## Screenshots / Demo 📷
-![Dashboard Placeholder](./assets/demo-dashboard.png)
-![Topic & Sentiment Output Placeholder](./assets/topic-sentiment-output.gif)
+![LDA Topic Modeling Output Placeholder](./assets/lda-topic-output.png)
+![Sentiment Classification Output Placeholder](./assets/sentiment-output.gif)
 
 Backend-style sample output:
 ```json
 {
-  "product_type": "digital_treadmill",
-  "dominant_topics": ["assembly_experience", "motor_noise", "app_connectivity"],
-  "topic_sentiment": {
-    "assembly_experience": -0.41,
-    "motor_noise": -0.33,
-    "app_connectivity": 0.18
-  },
-  "recommendation_score": 0.62
+  "review_id": 59955,
+  "sentences": [
+    "The bike works great.",
+    "Very smooth and stable ride."
+  ],
+  "language": "en",
+  "topics": ["ride_quality", "stability"],
+  "sentiment": ["positive", "positive"]
 }
 ```
 
 ## Technologies Used ☕️ 🐍 ⚛️
-- **Language/Runtime:** Python 3.x
-- **NLP & ML:** NLTK, spaCy, Gensim (LDA), scikit-learn
+- **Language:** Python 3
+- **Notebooks:** Jupyter / Google Colab
+- **NLP:** spaCy (`en_core_web_sm`), NLTK, `sentencex`, `langdetect`
+- **Topic Modeling:** Gensim (`LdaMulticore`, coherence scoring)
+- **Sentiment Modeling:** Hugging Face Transformers (`microsoft/deberta-v3-base` fine-tuned workflow)
 - **Data Processing:** pandas, NumPy
-- **Visualization:** Matplotlib, Seaborn, Plotly
-- **Notebooks/Analysis:** Jupyter
-- **Storage (typical):** CSV/Parquet + SQL database for review metadata
-- **Automation (typical):** GitHub Actions for CI
+- **Visualization:** Matplotlib, Seaborn
+- **Data/Infra Integrations:** PostgreSQL (`psycopg2`), Google Sheets CSV ingestion, Google Gemini API (for punctuation/splitting retries)
 
 ## Setup / Installation 💻
 ```bash
@@ -60,88 +61,92 @@ Backend-style sample output:
 git clone https://github.com/raghuveer9303/NLP-Fitness-Review-Insights.git
 cd NLP-Fitness-Review-Insights
 
-# 2) Create environment
+# 2) Create and activate virtual environment
 python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
-# 3) Install dependencies
-pip install -r requirements.txt
+# 3) Install core dependencies used in notebooks
+pip install pandas numpy gensim nltk spacy matplotlib seaborn transformers psycopg2-binary langdetect sentencex google-generativeai python-dotenv
+python -m spacy download en_core_web_sm
 
-# 4) Run pipeline / notebooks
+# 4) Launch notebooks
 jupyter notebook
 ```
 
 ## Approach 🚶
-The system follows a modular NLP pipeline:
-1. **Ingestion & Cleaning**: collect review text, ratings, timestamps, helpful votes, and product metadata; normalize noisy user text.
-2. **Topic Modeling (LDA)**: tune topic count and priors, then extract interpretable topic-word distributions and per-review topic mixtures.
-3. **Sentiment Layer**: compute overall and feature-level sentiment to connect “what customers talk about” with “how they feel.”
-4. **Insight Synthesis**: aggregate by category, brand, and price bucket to produce product and marketing recommendations.
+The system is implemented as a notebook-driven NLP pipeline:
+1. **Ingest & Normalize** review text from sheets/database.
+2. **Split Reviews into Sentences** with deterministic segmentation and fallback prompting.
+3. **Language Gate** to skip non-English entries.
+4. **Sentiment Scoring** using a fine-tuned DeBERTa classifier.
+5. **Topic Discovery** using LDA and coherence checks for interpretable themes.
+6. **Aggregate Insights** by product/review cohorts for downstream decision-making.
 
-Design decisions: batch-first processing for reproducibility, interpretable models over black-box models for stakeholder trust, and separable stages for easy extension.
+Design choices favor interpretability and iterative experimentation over premature service abstraction.
 
 ## Example Usage / Output
 ```text
 input:
-"Setup took 3 hours and instructions were confusing, but the ride quality is excellent."
+"Setup was easy, but after two weeks the belt started making noise."
 
 output:
-topics -> ["assembly_experience", "ride_quality"]
-sentiment -> {"assembly_experience": "negative", "ride_quality": "positive"}
+sentences -> ["Setup was easy.", "After two weeks the belt started making noise."]
+sentiment -> ["positive", "negative"]
+topics -> ["assembly_experience", "motor_noise"]
 ```
 
 ```text
 input:
-product_type=exercise_bike, price_bucket=mid_range
+review_id=59948, review_text="Buen producto pero envío lento"
 
 output:
-top_topics -> ["subscription_cost", "app_classes", "seat_comfort"]
-net_sentiment -> {"subscription_cost": -0.52, "app_classes": +0.64, "seat_comfort": -0.21}
+language -> "so" (non-English)
+action -> "skipped_from_sentiment_topic_pipeline"
 ```
 
 ```text
 input:
-date_range=2024-Q1, feature="bluetooth_connectivity"
+corpus=12,251 review sentences
 
 output:
-mention_volume=842
-positive=39%, neutral=22%, negative=39%
-trend="high volatility after firmware updates"
+lda_topics -> 8
+dominant_topic_example -> "app_connectivity"
+coherence_tracking -> "used to compare topic-count candidates"
 ```
 
 ## Project Structure 📁
 ```text
 NLP-Fitness-Review-Insights/
-├── README.md                 # Project overview, setup, and usage
-├── data/                     # Raw and processed review datasets
-├── notebooks/                # EDA, topic modeling, and sentiment experiments
-├── src/                      # Reusable pipeline code (preprocessing, modeling, reporting)
-├── outputs/                  # Generated charts, topic tables, and summary artifacts
-└── requirements.txt          # Python dependencies
+├── README.md                                        # Project overview, setup, and usage
+├── split_reviews.ipynb                              # Sentence splitting + language filtering + DB/Gemini-assisted processing
+├── Sentiment_Classification_Final_Model.ipynb       # Main sentiment model training/inference workflow
+├── Sentiment_Classify_Create_File_Create_Bucket.ipynb # Sentiment inference + bucket/file generation workflow
+└── Topic_Modelling_Colab_Notebook_LDA.ipynb         # LDA topic modeling, preprocessing, and coherence experiments
 ```
 
 ## Status 📶
-- **Current state:** In progress and actively maintained.
-- **Stable:** Core review cleaning, baseline topic modeling, and sentiment scoring workflow.
-- **Experimental:** Cross-platform normalization, dynamic topic labeling, and production-grade serving API.
+- **Current state:** Active and in progress.
+- **Stable:** Notebook workflows for sentence splitting, sentiment scoring, and LDA topic extraction.
+- **Experimental:** Prompt-based punctuation fallback and production-grade orchestration outside notebooks.
 
 ## Limitations ⚠️
-- LDA topics can drift with seasonal vocabulary and new product jargon.
-- Scraped reviews may be biased toward extreme experiences (very happy/very unhappy users).
-- Feature-level sentiment extraction can miss nuanced context (sarcasm, mixed sentiment in one sentence).
-- Large batch recomputation can be slow without distributed processing for 85k+ reviews.
+- Notebook-first architecture makes reproducible production deployment harder than package/script-based pipelines.
+- LDA topics can drift when vocabulary changes across seasons, brands, or new product lines.
+- External dependencies (Google Sheets, DB connectivity, Gemini API) can introduce runtime fragility.
+- Current language handling can skip valid mixed-language reviews instead of translating/normalizing them.
 
 ## Improvements / Roadmap 🚀
-- Add **BERTopic + sentence-transformer embeddings** and benchmark against LDA coherence/stability.
-- Introduce **incremental processing** (daily review deltas) to avoid full recomputation.
-- Build a **FastAPI inference service** for topic/sentiment scoring with versioned models.
-- Add **data quality gates in CI** (schema checks, duplicate detection, drift alerts).
+- Convert notebook logic into a reusable `src/` pipeline package + CLI entrypoints.
+- Add experiment tracking (metrics, model/version lineage) for sentiment and topic runs.
+- Benchmark LDA against embedding-based topic models (e.g., BERTopic) on coherence and stability.
+- Add containerized local run path (Docker Compose with Postgres + notebook/runtime service).
+- Add CI checks for notebook execution and data-contract validation.
 
 ## Credits 📝
-- [Latent Dirichlet Allocation (Blei, Ng, Jordan)](https://www.jmlr.org/papers/v3/blei03a.html)
-- [Gensim Topic Modeling](https://radimrehurek.com/gensim/)
-- [VADER Sentiment](https://github.com/cjhutto/vaderSentiment)
-- Community reviewers and open e-commerce review datasets that inspired this analysis approach.
+- [LDA paper (Blei, Ng, Jordan)](https://www.jmlr.org/papers/v3/blei03a.html)
+- [Gensim Documentation](https://radimrehurek.com/gensim/)
+- [Hugging Face Transformers](https://huggingface.co/docs/transformers/index)
+- [spaCy](https://spacy.io/)
 
 ## Author
-Raghuveer (`@raghuveer9303`) • LinkedIn: [your-linkedin](https://www.linkedin.com/) • GitHub: [raghuveer9303](https://github.com/raghuveer9303)
+Raghuveer • LinkedIn: [linkedin.com/in/raghuveer](https://www.linkedin.com/) • GitHub: [@raghuveer9303](https://github.com/raghuveer9303)
