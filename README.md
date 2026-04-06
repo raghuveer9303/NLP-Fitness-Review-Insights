@@ -72,7 +72,11 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 pip install pandas numpy gensim nltk spacy matplotlib seaborn transformers psycopg2-binary langdetect sentencex google-generativeai python-dotenv
 python -m spacy download en_core_web_sm
 
-# 4) Launch notebooks
+# 4) Configure optional integrations used in notebooks
+export GEMINI_API_KEY="your_api_key"   # Windows PowerShell: $env:GEMINI_API_KEY="your_api_key"
+# For DB-backed flows, update PostgreSQL connection fields inside split_reviews.ipynb
+
+# 5) Launch notebooks
 jupyter notebook
 ```
 
@@ -152,4 +156,4 @@ NLP-Fitness-Review-Insights/
 - [spaCy](https://spacy.io/)
 
 ## Author
-Raghuveer • LinkedIn: [linkedin.com/in/raghuveer](https://www.linkedin.com/) • GitHub: [@raghuveer9303](https://github.com/raghuveer9303)
+Raghuveer • LinkedIn: [linkedin.com/in/raghuveer9303](https://www.linkedin.com/in/raghuveer9303/) • GitHub: [@raghuveer9303](https://github.com/raghuveer9303)
