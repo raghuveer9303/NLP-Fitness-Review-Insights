@@ -53,7 +53,9 @@ Backend-style sample output:
 - **Sentiment Modeling:** Hugging Face Transformers (`microsoft/deberta-v3-base` fine-tuned workflow)
 - **Data Processing:** pandas, NumPy
 - **Visualization:** Matplotlib, Seaborn
-- **Data/Infra Integrations:** PostgreSQL (`psycopg2`), Google Sheets CSV ingestion, Google Gemini API (for punctuation/splitting retries)
+- **Data Sources:** Google Sheets CSV ingestion
+- **Database:** PostgreSQL (`psycopg2`)
+- **AI Service Integration:** Google Gemini API (for punctuation/splitting retries)
 
 ## Setup / Installation 💻
 ```bash
@@ -66,6 +68,7 @@ python -m venv .venv
 source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
 # 3) Install core dependencies used in notebooks
+# Note: versions are not pinned yet; for reproducibility, create and use a requirements.txt lockfile.
 pip install pandas numpy gensim nltk spacy matplotlib seaborn transformers psycopg2-binary langdetect sentencex google-generativeai python-dotenv
 python -m spacy download en_core_web_sm
 
@@ -100,7 +103,7 @@ input:
 review_id=59948, review_text="Buen producto pero envío lento"
 
 output:
-language -> "so" (non-English)
+language -> "es" (non-English for current pipeline)
 action -> "skipped_from_sentiment_topic_pipeline"
 ```
 
