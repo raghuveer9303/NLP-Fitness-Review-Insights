@@ -55,7 +55,7 @@ Backend-style sample output:
 - **Visualization:** Matplotlib, Seaborn
 - **Data Sources:** Google Sheets CSV ingestion
 - **Database:** PostgreSQL (`psycopg2`)
-- **AI Service Integration:** Google Gemini API (fallback punctuation/splitting when deterministic sentence segmentation fails on malformed review text)
+- **AI Service Integration:** Google Gemini API (optional fallback used only for malformed text where deterministic sentence segmentation fails; increases per-record cost and latency when invoked)
 
 ## Setup / Installation 💻
 ```bash
@@ -69,13 +69,17 @@ source .venv/bin/activate   # Windows: .venv\Scripts\activate
 
 # 3) Install core dependencies used in notebooks
 # Note: use these bounded ranges now; generate a pinned requirements.txt for production reproducibility.
-pip install "pandas>=2.0,<3" "numpy>=1.24,<3" "gensim>=4.3,<5" "nltk>=3.8,<4" "spacy>=3.7,<4" "matplotlib>=3.7,<4" "seaborn>=0.12,<1" "transformers>=4.40,<5" "psycopg2-binary>=2.9,<3" "langdetect>=1.0,<2" "sentencex>=0.8,<1" "google-generativeai>=0.8,<1" "python-dotenv>=1.0,<2"
+pip install \
+  "pandas>=2.0,<3" "numpy>=1.24,<3" "gensim>=4.3,<5" "nltk>=3.8,<4" \
+  "spacy>=3.7,<4" "matplotlib>=3.7,<4" "seaborn>=0.12,<1" \
+  "transformers>=4.40,<5" "psycopg2-binary>=2.9,<3" "langdetect>=1.0,<2" \
+  "sentencex>=0.8,<1" "google-generativeai>=0.8,<1" "python-dotenv>=1.0,<2"
 python -m spacy download en_core_web_sm
 
 # 4) Configure optional integrations used in notebooks
 # Create a .env file in project root and add:
 # GEMINI_API_KEY=your_api_key
-# For DB-backed flows in split_reviews.ipynb, set DB_CONFIG with host, port, database, user, and password values for your Postgres instance.
+# For DB-backed flows in split_reviews.ipynb, edit the in-notebook Python dictionary `DB_CONFIG` with: host, port, database, user, password.
 
 # 5) Launch notebooks
 jupyter notebook
@@ -141,7 +145,7 @@ NLP-Fitness-Review-Insights/
 - Notebook-first architecture makes reproducible production deployment harder than package/script-based pipelines.
 - LDA topics can drift when vocabulary changes across seasons, brands, or new product lines.
 - External dependencies (Google Sheets, DB connectivity, Gemini API) can introduce runtime fragility.
-- Current language handling can skip valid mixed-language reviews instead of translating/normalizing them.
+- Current language gate skips non-English and mixed-language reviews instead of translating/normalizing them.
 
 ## Improvements / Roadmap 🚀
 - Convert notebook logic into a reusable `src/` pipeline package + CLI entrypoints.
